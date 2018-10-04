@@ -232,13 +232,14 @@ namespace UnityEngine.Experimental.Rendering.LightweightPipeline
                 setupToUse.Setup(renderer, ref renderingData);
                 renderer.Execute(context, ref renderingData);
 
-                context.ExecuteCommandBuffer(cmd);
-                CommandBufferPool.Release(cmd);
-                context.Submit();
 #if UNITY_EDITOR
                 Handles.DrawGizmos(camera);
 #endif
             }
+            
+            context.ExecuteCommandBuffer(cmd);
+            CommandBufferPool.Release(cmd);
+            context.Submit();
         }
 
         static void SetSupportedRenderingFeatures()
