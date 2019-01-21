@@ -681,7 +681,7 @@ namespace UnityEngine.Experimental.Rendering.HDPipeline
 
         public void PushGlobalParams(HDCamera hdCamera, CommandBuffer cmd, DiffusionProfileSettings sssParameters)
         {
-            using (new ProfilingSample(cmd, "Push Global Parameters", CustomSamplerId.PushGlobalParameters.GetSampler()))
+            using (var sample = new ProfilingSample(cmd, "Push Global Parameters", CustomSamplerId.PushGlobalParameters.GetSampler()))
             {
                 // Set up UnityPerFrame CBuffer.
                 m_SSSBufferManager.PushGlobalParams(hdCamera, cmd, sssParameters);
@@ -980,10 +980,14 @@ namespace UnityEngine.Experimental.Rendering.HDPipeline
                     {
                         // Flush pending command buffer.
                         renderContext.ExecuteCommandBuffer(cmd);
-                        CommandBufferPool.Release(cmd);
 
                         // Execute custom render
                         additionalCameraData.ExecuteCustomRender(renderContext, hdCamera);
+                        
+                        // make sure sample is closed
+                        sample.Dispose();
+                        renderContext.ExecuteCommandBuffer(cmd);
+                        CommandBufferPool.Release(cmd);
 
                         renderContext.Submit();
                         continue;
@@ -1002,6 +1006,10 @@ namespace UnityEngine.Experimental.Rendering.HDPipeline
                     ScriptableCullingParameters cullingParams;
                     if (!camera.TryGetCullingParameters(camera.stereoEnabled, out cullingParams)) // Fixme remove stereo passdown?
                     {
+                        sample.Dispose();
+                        renderContext.ExecuteCommandBuffer(cmd);
+                        CommandBufferPool.Release(cmd);
+
                         renderContext.Submit();
                         continue;
                     }
